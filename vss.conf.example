@@ -1,0 +1,65 @@
+[General]
+Experiment-Name = FANCY_EXPERIMENT
+PPi-Revision = rev1
+
+[Operators]
+operator1 = email1@uibk.ac.at
+operator2 = email2@uibk.ac.at
+
+[Relay A]
+pin = 7
+name = A
+warning = On
+shutdown = On
+active = On
+
+[Relay B]
+pin = 8
+name = B
+warning = On
+shutdown = On
+active = On
+
+[Relay C]
+pin = 10
+name = C
+warning = On
+shutdown = On
+active = Off
+
+[Relay D]
+pin = 11
+name = D
+warning = On
+shutdown = On
+active = Off
+
+[Relay E]
+pin = 12
+name = E
+warning = On
+shutdown = On
+active = On
+
+[Relay F]
+pin = 13
+name = F
+warning = On
+shutdown = On
+active = Off
+
+[Shutdown]
+pin1 = 24
+pin2 = 26
+
+[Error-LED]
+pin = 22
+
+[Reset-Button]
+pin = 19
+
+[Email-Account]
+email = On
+username = #zid-account goes here
+password = #zid password goes here
+server = smtp.uibk.ac.at
