@@ -111,6 +111,8 @@ for relay in relays:
         relays[relay]['warning'] = cfg.getboolean('Relay ' + relay, 'warning')
         relays[relay]['shutdown'] = cfg.getboolean('Relay ' + relay, 'shutdown')
         relays[relay]['active'] = cfg.getboolean('Relay ' + relay, 'active')
+        # this is the failure state. we set it to true by default
+        relays[relay]['failure'] = True
     except:
         conf_errors += ('Configuration Errors in Section %s \r\n' % relay)
     
@@ -185,12 +187,16 @@ def emergency_shutdown(channel):
     for relay in relays:
         if relays[relay]['channel'] == channel:
             error_relay = relay
-    
-    # send email
-    send_email_to_op('Emergency Shutdown of %s, because relay %s reported high pressure.' % (exp_name, relays[error_relay]['name']))
-    
-    # log
-    log.write('Emergency Shutdown of %s, because relay %s reported high pressure.' % (exp_name, relays[error_relay]['name']))
+            
+    if relays[errorrelay]['failure'] is False:
+        # send email
+        send_email_to_op('Emergency Shutdown of %s, because relay %s reported high pressure.' % (exp_name, relays[error_relay]['name']))
+        
+        # log
+        log.write('Emergency Shutdown of %s, because relay %s reported high pressure.' % (exp_name, relays[error_relay]['name']))
+        
+        # set error state for this particular relay
+        relays[errorrelay]['failure'] = True
     
 def confirm(channel):
     # for startup we always check whether all relays show the status ok (1 or True).
@@ -201,6 +207,9 @@ def confirm(channel):
         if relays[relay]['active'] is True:
             if GPIO.input(relays[relay]['channel']) != 1:
                 startup = False
+                relays[relay]['failure'] = True
+            elif GPIO.input(relays[relay]['channel']) == 1:
+                relays[relay]['failure'] = False
         
     #ready to go?
     if startup is True:
@@ -227,11 +236,15 @@ def send_warning(channel):
         if relays[relay]['channel'] == channel:
             error_relay = relay
     
-    # send email
-    send_email_to_op('%s WARNING: relay %s reported high pressure.' % (exp_name, relays[error_relay]['name']))
-    
-    # log
-    log.write('%s WARNING: relay %s reported high pressure.' % (exp_name, relays[error_relay]['name']))
+    if relays[errorrelay]['failure'] is False:
+        # send email
+        send_email_to_op('%s WARNING: relay %s reported high pressure.' % (exp_name, relays[error_relay]['name']))
+        
+        # log
+        log.write('%s WARNING: relay %s reported high pressure.' % (exp_name, relays[error_relay]['name']))
+            
+        # set error state for this particular relay
+        relays[errorrelay]['failure'] = True
         
 # add the event callback for the reset button
 GPIO.add_event_detect(reset_button, GPIO.RISING, bouncetime = 2000)
@@ -242,7 +255,7 @@ GPIO.add_event_callback(reset_button, confirm)
 for relay in relays:
     # only for active ones
     if relays[relay]['active'] is True:
-        GPIO.add_event_detect(relays[relay]['channel'], GPIO.FALLING)
+        GPIO.add_event_detect(relays[relay]['channel'], GPIO.FALLING, bouncetime = 2000)
         # we want the shutdown first, as the two callbacks are executed one after the other
         if relays[relay]['shutdown'] is True:
             GPIO.add_event_callback(relays[relay]['channel'], emergency_shutdown)
