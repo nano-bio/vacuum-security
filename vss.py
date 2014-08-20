@@ -9,7 +9,7 @@ import time
 
 # add your path to the fitlib. include the fitlib directory, because we don't
 # want the whole fitlib, but just loglib
-sys.path.append('C:\\dummylibraryfolder\\homefolder\\fitlib\\')
+sys.path.append('/home/pi/fitlib/')
 
 import loglib
 
@@ -72,8 +72,9 @@ def send_email_to_op(text):
             msg['From'] = exp_name
             for operator_id, email in emails_list:
                 msg['To'] = email
-            s.sendmail(email, 'johannes.postler@uibk.ac.at', msg.as_string())
+            s.sendmail('johannes.postler@uibk.ac.at', email, msg.as_string())
             s.quit()
+            log.write('Email sent.')
         except:
             log.write('Could not inform operator. Sending email failed.')
             log.write('The original message was:')
@@ -188,7 +189,7 @@ def emergency_shutdown(channel):
         if relays[relay]['channel'] == channel:
             error_relay = relay
             
-    if relays[errorrelay]['failure'] is False:
+    if relays[error_relay]['failure'] is False:
         # send email
         send_email_to_op('Emergency Shutdown of %s, because relay %s reported high pressure.' % (exp_name, relays[error_relay]['name']))
         
@@ -196,7 +197,7 @@ def emergency_shutdown(channel):
         log.write('Emergency Shutdown of %s, because relay %s reported high pressure.' % (exp_name, relays[error_relay]['name']))
         
         # set error state for this particular relay
-        relays[errorrelay]['failure'] = True
+        relays[error_relay]['failure'] = True
     
 def confirm(channel):
     # for startup we always check whether all relays show the status ok (1 or True).
@@ -236,7 +237,7 @@ def send_warning(channel):
         if relays[relay]['channel'] == channel:
             error_relay = relay
     
-    if relays[errorrelay]['failure'] is False:
+    if relays[error_relay]['failure'] is False:
         # send email
         send_email_to_op('%s WARNING: relay %s reported high pressure.' % (exp_name, relays[error_relay]['name']))
         
@@ -244,7 +245,7 @@ def send_warning(channel):
         log.write('%s WARNING: relay %s reported high pressure.' % (exp_name, relays[error_relay]['name']))
             
         # set error state for this particular relay
-        relays[errorrelay]['failure'] = True
+        relays[error_relay]['failure'] = True
         
 # add the event callback for the reset button
 GPIO.add_event_detect(reset_button, GPIO.RISING, bouncetime = 2000)
